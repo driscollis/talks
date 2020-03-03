@@ -131,3 +131,5 @@ dmypy.json
 talks.wpr
 
 talks.wpu
+
+.DS_Store
