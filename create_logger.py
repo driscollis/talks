@@ -5,5 +5,5 @@ log = logging.getLogger("ex")
 
 try:
     raise RuntimeError
-except Exception, err:
+except Exception as err:
     log.exception("Error!")
