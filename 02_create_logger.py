@@ -1,7 +1,8 @@
 import logging
 
-logging.basicConfig(filename="ex_logger.log", level=logging.INFO)
+logging.basicConfig(filename="ex_logger.log")
 log = logging.getLogger("ex")
+log.setLevel(logging.INFO)
 
 try:
     raise RuntimeError
