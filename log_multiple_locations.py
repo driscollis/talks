@@ -1,12 +1,10 @@
 import logging
-import os
 
 def log(path, multipleLocs=False):
     """
     Log to multiple locations if multipleLocs is True
     """
-    fname = os.path.splitext(path)[0]
-    logger = logging.getLogger("Test_logger_%s" % fname)
+    logger = logging.getLogger("Test_logger")
     logger.setLevel(logging.INFO)
     fh = logging.FileHandler(path)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
