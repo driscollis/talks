@@ -1,0 +1,7 @@
+The following are tests for dtest2.py
+
+>>> from dtest2 import double
+>>> double(4)
+8
+>>> double(8)
+18
