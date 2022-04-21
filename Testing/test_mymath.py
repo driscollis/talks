@@ -13,7 +13,7 @@ class TestAdd(unittest.TestCase):
         Test that the addition of two integers returns the correct total
         """
         result = mymath.add(1, 2)
-        self.assertEqual(result, 4)
+        self.assertEqual(result, 3)
 
     def test_add_floats(self):
         """
