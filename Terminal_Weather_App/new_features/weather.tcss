@@ -1,0 +1,33 @@
+Weather {
+    background: $boost;
+    height: 5;
+    margin: 1;
+    min-width: 50;
+    padding: 1;
+    border: round blue;
+    height: 8;
+}
+
+#add_weather{
+    height: auto;
+    margin: 1;
+    border: solid green;
+    background: $panel-lighten-1;
+}
+
+Input {
+    width: 50%;
+    margin: 1;
+    border: solid purple;
+}
+
+Button {
+    background: blue;
+    margin: 1;
+}
+
+Select{
+    width: 30;
+    margin: 1;
+    background: $boost;
+}
