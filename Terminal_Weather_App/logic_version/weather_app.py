@@ -7,7 +7,7 @@ from rich.text import Text
 from textual import on, work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, HorizontalGroup, VerticalScroll, Vertical
-from textual.widgets import Button, Label, Header, Input, Select
+from textual.widgets import Button, Label, Header, Input
 from textual.worker import get_current_worker
 
 wmo_codes = {0: "Clear sky",
@@ -43,14 +43,9 @@ wmo_to_emoji = {
 
 class Weather(HorizontalGroup):
 
-    def __init__(self, postal_code: str, country: str, temp_unit: str) -> None:
+    def __init__(self, postal_code: str) -> None:
         super().__init__()
         self.postal_code = postal_code
-        self.country = country
-        self.temp_unit = temp_unit  # Fahrenheit or Celsius
-
-        # Update the weather once every hour
-        self.set_interval(3600, self.update_weather)
 
     def compose(self) -> ComposeResult:
         yield Vertical(
@@ -80,14 +75,14 @@ class Weather(HorizontalGroup):
     @work(exclusive=True, thread=True, group="weather")
     def update_weather(self):
         worker = get_current_worker()
-        nomi = pgeocode.Nominatim(self.country)
+        nomi = pgeocode.Nominatim("us")
         location = nomi.query_postal_code(self.postal_code)
         lat = location["latitude"]
         lon = location["longitude"]
 
         url = (f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,"
                f"precipitation,rain,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min"
-               f"&temperature_unit={self.temp_unit}&timezone=America%2FChicago")
+               f"&temperature_unit=fahrenheit&timezone=America%2FChicago")
         response = requests.get(url)
 
         if not worker.is_cancelled and response.status_code == 200:
@@ -99,16 +94,12 @@ class Weather(HorizontalGroup):
         state_code = location["state_code"]
         temp = weather_data["current"]["temperature_2m"]
 
-        temp_abbrev = "F" if self.temp_unit == "fahrenheit" else "C"
-
         wmo_code = weather_data["daily"]["weather_code"][0]
         emoji = Text.from_markup(f":{wmo_to_emoji[wmo_code]}:")
         weather =  f"Current Weather: {emoji}  {wmo_codes[wmo_code]}"
 
-        self.app.query_one(f"#location_{self.postal_code}").update(
-            Text(f"{town}, {state_code}", style="magenta2"))
-        self.app.query_one(f"#current_temp_{self.postal_code}").update(
-            Text(f"Current Temp: {temp} {temp_abbrev}", style="gold1"))
+        self.app.query_one(f"#location_{self.postal_code}").update(Text(f"{town}, {state_code}", style="magenta2"))
+        self.app.query_one(f"#current_temp_{self.postal_code}").update(Text(f"Current Temp: {temp} F", style="gold1"))
         self.app.query_one(f"#wmo_{self.postal_code}").update(Text(f"{weather}", style="gold1"))
 
         # Update 3-Day forecast
@@ -122,26 +113,18 @@ class Weather(HorizontalGroup):
             day = weather_data['daily']['time'][count]
 
             self.app.query_one(f"#{tag}_{self.postal_code}").update(Text(f"{day}", style="green"))
-            self.app.query_one(f"#{tag}_temp_{self.postal_code}").update(
-                Text(f"Low: {low} {temp_abbrev} / High: {high} {temp_abbrev}", style="orange3"))
-            self.app.query_one(f"#{tag}_weather_{self.postal_code}").update(
-                Text(f"{emoji}  {wmo_codes[wmo_code]}", style="blue"))
+            self.app.query_one(f"#{tag}_temp_{self.postal_code}").update(Text(f"Low: {low} F / High: {high} F", style="orange3"))
+            self.app.query_one(f"#{tag}_weather_{self.postal_code}").update(Text(f"{emoji}  {wmo_codes[wmo_code]}", style="blue"))
             count += 1
-
-        self.notify(f"Weather updated for {town} {state_code}")
 
 class WeatherApp(App):
 
     CSS_PATH = "weather.tcss"
 
     def compose(self) -> ComposeResult:
-        country_options = [("United States", "us"), ("France", "fr")]
-        temp_unit_options = [("Celsius", "celsius"), ("Fahrenheit", "fahrenheit")]
         yield Header()
         yield Horizontal(
             Input(placeholder="Postal Code", id="postal_code"),
-            Select(country_options, value=country_options[0][1], id="country"),
-            Select(temp_unit_options, value=temp_unit_options[0][1], id="temp_unit"),
             Button("Add Weather", id="add_weather"),
             id="add_weather"
         )
@@ -150,10 +133,8 @@ class WeatherApp(App):
     @on(Button.Pressed, "#add_weather")
     def on_weather_added(self) -> None:
         postal_code = self.query_one("#postal_code", Input).value
-        country = self.query_one("#country").value
-        temp_unit = self.query_one("#temp_unit").value
         if postal_code:
-            self.query_one("#vertical_scroll").mount(Weather(postal_code, country, temp_unit))
+            self.query_one("#vertical_scroll").mount(Weather(postal_code))
 
 if __name__ == "__main__":
     app = WeatherApp()
