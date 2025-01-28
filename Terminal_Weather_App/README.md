@@ -1,6 +1,6 @@
 # Creating a Weather App in Your Terminal
 
-## Mike Driscoll
+## by Mike Driscoll
 
 ## How to get started
 
